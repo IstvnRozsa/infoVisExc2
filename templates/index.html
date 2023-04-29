@@ -10,26 +10,28 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-6">
-            <h1>Death Rate - Agricultural land by countries</h1>
+            <h2>Death Rate - Agricultural land by countries</h2>
             <div id="scatter-plot"></div>
+            <div class="container">
+                <div class="form-group">
+                    <label for="exampleSelect">Select an option:</label>
+                    <select class="form-control" id="exampleSelect">
+                    </select>
+                </div>
+            </div>
+            <h2 id="line_plot_header"></h2>
+            <div class="container">
+                <svg id="line_plot"></svg>
+            </div>
+
         </div>
         <div class="col-md-6">
-            <h1>World Map</h1>
+            <h2>Europe</h2>
             <svg id="d3_demo"></svg>
         </div>
     </div>
 
-    <div class="container">
-        <div class="form-group">
-            <label for="exampleSelect">Select an option:</label>
-            <select class="form-control" id="exampleSelect">
-            </select>
-        </div>
-    </div>
-    <div class="container">
-        <div id="line_plot"></div>
 
-    </div>
         <h1>Dataset</h1>
         <div class="table-responsive">
             <table class="table table-bordered table-striped">
@@ -41,17 +43,16 @@
 
 
 <script>
-
     let dataset = {{ dataset | safe }};
     //let agricultural_land_p = dataset.map(item => item["Agricultural land (% of land area)"]);
     //let death_rate = dataset.map(item => item["Death rate, crude (per 1,000 people)"]);
-    datasetFilteredByYear = dataset.filter(d => d["year"] === 2015);
+    datasetFilteredByYear = dataset.filter(d => d["year"] === 2016);
     console.log(dataset);
 
     // Define the margins and dimensions of the chart
     const margin = {top: 20, right: 20, bottom: 60, left: 60};
     const width = 500 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    const height = 300 - margin.top - margin.bottom;
 
 
     // Define the tooltip
@@ -95,7 +96,7 @@
         .text("Death rate, crude (per 1,000 people)");
 
 
-    var previousCountry = null;
+    var previousCountry = "Hungary";
 
     function highlightPoint(selectedData) {
         // Set a variable on click of a circle
@@ -117,10 +118,14 @@
 
     function selectDataByFeature(){
         if(selectedFeature===null){
-            selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({name: d["Country Name"], year: d["Year"], feature: d["Agricultural land (% of land area)"]}));
+            selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({year: d["year"], feature: d["Agricultural land (% of land area)"]}));
         }else{
-            selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({name: d["Country Name"], year: d["Year"], feature: d[selectedFeature]}));
+            selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({year: d["year"], feature: d[selectedFeature]}));
         }
+
+        console.log("Selected dataset: ", selectedDatasetByFeatures);
+        updateLinePlot(selectedDatasetByFeatures);
+        d3.select("#line_plot_header").text(selectedFeature +" in " +previousCountry);
     }
 
     // Draw the scatter plot
@@ -165,7 +170,11 @@
     const svg2 = d3.select("#d3_demo").attr("viewBox", [0, 0, width, height]);
 
     //let projection = d3.geoEquirectangular().center([0, 0]);
-    let projection = d3.geoMercator().scale(140).translate([width / 2, height / 1.4]);
+    //let projection = d3.geoMercator().scale(140).translate([width / 2, height / 1.4]);
+    let projection = d3.geoMercator()
+        .center([0, 55])
+        .scale(200)
+        .translate([width/2, height/2]);
 
     const pathGenerator = d3.geoPath().projection(projection);
 
@@ -230,68 +239,87 @@
         });
 
     // Save the selected element to a variable
-    var selectedFeature = null;
+    var selectedFeature = "Agricultural land (% of land area)";
     dropdown.on("change", function () {
         selectedFeature = d3.select(this).node().value;
         console.log("Selected element: " + selectedFeature);
+        selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({
+            year: d["year"],
+            feature: d[selectedFeature]
+        }));
+
+        d3.select("#line_plot_header").text(selectedFeature +" in " +previousCountry);
+        updateLinePlot(selectedDatasetByFeatures);
     });
 
 
     // Sample data
+    selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({year: d["year"], feature: d[selectedFeature]}));
+    console.log("Initial dataset: ", selectedDatasetByFeatures);
 
-    // append the svg object to the body of the page
-    const svglinePlot = d3.select("#line_plot")
-        .append("svg")
+
+// append the svg object to the body of the page
+    const linePlotSvg = d3.select("#line_plot")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    //Read the data
-    d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered_comma.csv",
+    // Initialise a X axis:
+    const x = d3.scaleLinear().range([0, width]);
+    const xAxis = d3.axisBottom().scale(x);
+    linePlotSvg.append("g")
+        .attr("transform", `translate(0, ${height})`)
+        .attr("class", "myXaxis")
 
-        // When reading the csv, I must format variables:
-        function (d) {
-            return {date: d3.timeParse("%Y-%m-%d")(d.date), value: d.value}
-        }).then(
-        // Now I can use this dataset:
-        function (data) {
+    // Initialize an Y axis
+    const y = d3.scaleLinear().range([height, 0]);
+    const yAxis = d3.axisLeft().scale(y);
+    linePlotSvg.append("g")
+        .attr("class", "myYaxis")
 
-            // Add X axis --> it is a date format
-            const x = d3.scaleTime()
-                .domain(d3.extent(data, function (d) {
-                    return d.date;
+    // Create a function that takes a dataset as input and update the plot:
+    function updateLinePlot(data) {
+
+        // Create the X axis:
+        x.domain([d3.min(data, function (d) { return d.year}), d3.max(data, function (d) { return d.year})]);
+        linePlotSvg.selectAll(".myXaxis").transition()
+            .duration(3000)
+            .call(xAxis);
+
+        // create the Y axis
+        y.domain([d3.min(data, function (d) {return d.feature}), d3.max(data, function (d) {return d.feature})]);
+        linePlotSvg.selectAll(".myYaxis")
+            .transition()
+            .duration(3000)
+            .call(yAxis);
+
+        // Create a update selection: bind to the new data
+        const u = linePlotSvg.selectAll(".lineTest")
+            .data([data], function (d) {
+                return d.year
+            });
+
+        // Updata the line
+        u
+            .join("path")
+            .attr("class", "lineTest")
+            .transition()
+            .duration(3000)
+            .attr("d", d3.line()
+                .x(function (d) {
+                    return x(d.year);
+                })
+                .y(function (d) {
+                    return y(d.feature);
                 }))
-                .range([0, width]);
-            svglinePlot.append("g")
-                .attr("transform", `translate(0, ${height})`)
-                .call(d3.axisBottom(x));
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2.5)
+    }
 
-            // Add Y axis
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(data, function (d) {
-                    return +d.value;
-                })])
-                .range([height, 0]);
-            svglinePlot.append("g")
-                .call(d3.axisLeft(y));
-
-            // Add the line
-            svglinePlot.append("path")
-                .datum(data)
-                .attr("fill", "none")
-                .attr("stroke", "steelblue")
-                .attr("stroke-width", 1.5)
-                .attr("d", d3.line()
-                    .x(function (d) {
-                        return x(d.date)
-                    })
-                    .y(function (d) {
-                        return y(d.value)
-                    })
-                )
-
-        });
+    // At the beginning, I run the update function on the first dataset:
+    updateLinePlot(selectedDatasetByFeatures);
     /*
     *
     *
@@ -331,6 +359,7 @@
             .append("td")
             .text(d => d)
             .attr("class", "table-cell");
+        d3.select("#line_plot_header").text(selectedFeature +" in " +previousCountry);
 </script>
 
 {% endblock %}

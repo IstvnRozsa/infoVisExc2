@@ -22,3 +22,8 @@
     fill: #ccc;
     stroke: #999;
 }
+
+path {
+fill: none;
+stroke: black;
+}
