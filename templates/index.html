@@ -1,32 +1,35 @@
 {% extends 'base.html' %}
 
 {% block head %}
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<script src="https://d3js.org/d3.v7.min.js"></script>
 {% endblock %}
 
 
 {% block body %}
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-6">
-                <h1>Death Rate - Agricultural land by countries</h1>
-                <div id="scatter-plot"></div>
-            </div>
-            <div class="col-md-6">
-                <h1>World Map</h1>
-                <svg id="d3_demo"></svg>
-            </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <h1>Death Rate - Agricultural land by countries</h1>
+            <div id="scatter-plot"></div>
         </div>
+        <div class="col-md-6">
+            <h1>World Map</h1>
+            <svg id="d3_demo"></svg>
+        </div>
+    </div>
 
-        <div class="container">
-            <div class="form-group">
-                <label for="exampleSelect">Select an option:</label>
-                <select class="form-control" id="exampleSelect">
-                </select>
-            </div>
+    <div class="container">
+        <div class="form-group">
+            <label for="exampleSelect">Select an option:</label>
+            <select class="form-control" id="exampleSelect">
+            </select>
         </div>
-        <svg id="line_plot" height="500" width="500"></svg>
+    </div>
+    <div class="container">
+        <div id="line_plot"></div>
+
+    </div>
         <h1>Dataset</h1>
         <div class="table-responsive">
             <table class="table table-bordered table-striped">
@@ -34,224 +37,282 @@
                 <tbody></tbody>
             </table>
         </div>
-
-    </div>
-
+</div>
 
 
+<script>
 
-    <script>
+    let dataset = {{ dataset | safe }};
+    //let agricultural_land_p = dataset.map(item => item["Agricultural land (% of land area)"]);
+    //let death_rate = dataset.map(item => item["Death rate, crude (per 1,000 people)"]);
+    datasetFilteredByYear = dataset.filter(d => d["year"] === 2015);
+    console.log(dataset);
 
-        let dataset = {{ dataset | safe }};
-        //let agricultural_land_p = dataset.map(item => item["Agricultural land (% of land area)"]);
-        //let death_rate = dataset.map(item => item["Death rate, crude (per 1,000 people)"]);
-        dataset = dataset.filter(d => d["year"] === 2015);
-        console.log(dataset);
-
-        // Define the margins and dimensions of the chart
-        const margin = {top: 20, right: 20, bottom: 60, left: 60};
-        const width = 500 - margin.left - margin.right;
-        const height = 400 - margin.top - margin.bottom;
-
-
-        // Define the tooltip
-        const tooltip = d3.select(".tooltip");
-        var svg = d3.select("#scatter-plot")
-            .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-        // Define x and y scales
-        var xScale = d3.scaleLinear()
-            .domain([0, d3.max(dataset, function (d) {
-                return d["Agricultural land (% of land area)"];
-            })])
-            .range([0, width]);
-
-        var yScale = d3.scaleLinear()
-            .domain([0, d3.max(dataset, function (d) {
-                return d["Death rate, crude (per 1,000 people)"];
-            })])
-            .range([height, 0]);
-
-        // Draw x and y axes
-        svg.append("g")
-            .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(xScale));
-
-        svg.append("g")
-            .call(d3.axisLeft(yScale));
-        // Append the x and y axis labels to the SVG container
-        svg.append("text")
-            .attr("text-anchor", "middle")
-            .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
-            .text("Agricultural land (% of land area)");
-
-        svg.append("text")
-            .attr("text-anchor", "middle")
-            .attr("transform", `translate(-40, ${height / 2}) rotate(-90)`)
-            .text("Death rate, crude (per 1,000 people)");
+    // Define the margins and dimensions of the chart
+    const margin = {top: 20, right: 20, bottom: 60, left: 60};
+    const width = 500 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
 
 
-        var previousCountry = null;
+    // Define the tooltip
+    const tooltip = d3.select(".tooltip");
+    var svg = d3.select("#scatter-plot")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        function highlightPoint(selectedData) {
-            // Set a variable on click of a circle
-            console.log("Clicked data:", selectedData);
-            svg.selectAll("circle").style("fill", "blue");
-            svg.selectAll("circle#" + selectedData).style("fill", "red");
+    // Define x and y scales
+    var xScale = d3.scaleLinear()
+        .domain([0, d3.max(datasetFilteredByYear, function (d) {
+            return d["Agricultural land (% of land area)"];
+        })])
+        .range([0, width]);
 
-            if (previousCountry !== null) {
-                g.selectAll("path#" + previousCountry).style("fill", "grey");
-            }
+    var yScale = d3.scaleLinear()
+        .domain([0, d3.max(datasetFilteredByYear, function (d) {
+            return d["Death rate, crude (per 1,000 people)"];
+        })])
+        .range([height, 0]);
 
-            g.selectAll("path#" + selectedData).style("fill", "red");
-            previousCountry = selectedData;
-            console.log(previousCountry);
+    // Draw x and y axes
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(xScale));
+
+    svg.append("g")
+        .call(d3.axisLeft(yScale));
+    // Append the x and y axis labels to the SVG container
+    svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
+        .text("Agricultural land (% of land area)");
+
+    svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("transform", `translate(-40, ${height / 2}) rotate(-90)`)
+        .text("Death rate, crude (per 1,000 people)");
+
+
+    var previousCountry = null;
+
+    function highlightPoint(selectedData) {
+        // Set a variable on click of a circle
+        console.log("Clicked data:", selectedData);
+        svg.selectAll("circle").style("fill", "blue");
+        svg.selectAll("circle#" + selectedData).style("fill", "red");
+
+        if (previousCountry !== null) {
+            g.selectAll("path#" + previousCountry).style("fill", "grey");
         }
 
+        g.selectAll("path#" + selectedData).style("fill", "red");
+        previousCountry = selectedData;
+        console.log(previousCountry);
+        selectDataByFeature();
+    }
 
-        // Draw the scatter plot
-        svg.selectAll("circle")
-            .data(dataset)
-            .enter()
-            .append("circle")
-            .on("click", function (d) {
-                // Set a variable on click of a circle
-                highlightPoint(d.explicitOriginalTarget.id);
-            })
-            .attr("id", function (d) {
-                return d["Country Name"];
-            })
-            .attr("cx", d => xScale(d["Agricultural land (% of land area)"]))
-            .attr("cy", d => yScale(d["Death rate, crude (per 1,000 people)"]))
-            .attr("r", 5)
-            .attr("fill", "blue")
-            .append("title")
-            .text(d => d["Country Name"]);
+    let selectedDatasetByFeatures = null;
 
+    function selectDataByFeature(){
+        if(selectedFeature===null){
+            selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({name: d["Country Name"], year: d["Year"], feature: d["Agricultural land (% of land area)"]}));
+        }else{
+            selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({name: d["Country Name"], year: d["Year"], feature: d[selectedFeature]}));
+        }
+    }
 
-        /*
-        *
-        *
-        *
-        *
-        *
-        *
-        ----------------------------- Map
-        *
-        *
-        *
-        *
-        *
-        *
-        *
-        */
-
-        //var highlightedCountries = ["United States", "Canada", "Mexico", "Brazil", "Argentina", "Chile"];
-        var highlightedCountries = dataset.map(item => item["Country Name"]);
-        const svg2 = d3.select("#d3_demo").attr("viewBox", [0, 0, width, height]);
-
-        //let projection = d3.geoEquirectangular().center([0, 0]);
-        let projection = d3.geoMercator().scale(140).translate([width / 2, height / 1.4]);
-
-        const pathGenerator = d3.geoPath().projection(projection);
-
-        let g = svg2.append("g");
-
-        d3
-            .json(
-                "https://raw.githubusercontent.com/iamspruce/intro-d3/main/data/countries-110m.geojson"
-            )
-            .then((data) => {
-                g
-                    .selectAll("path")
-                    .data(data.features)
-                    .join("path")
-                    .on("click", function (d) {
-                        // Set a variable on click of a circle
-                        highlightPoint(d.explicitOriginalTarget.id);
-                    })
-                    .attr("d", pathGenerator)
-                    .attr("id", function (d) {
-                        return d.properties.name;
-                    })
-                    .attr("class", "country")
-                    .style("fill", function (d) {
-                        if (highlightedCountries.includes(d.properties.name)) {
-                            // Highlight the country in red if it's in the list of highlighted countries
-                            return "grey";
-                        }
-                    })
-                ;
-            });
+    // Draw the scatter plot
+    svg.selectAll("circle")
+        .data(datasetFilteredByYear)
+        .enter()
+        .append("circle")
+        .on("click", function (d) {
+            // Set a variable on click of a circle
+            highlightPoint(d.explicitOriginalTarget.id);
+        })
+        .attr("id", function (d) {
+            return d["Country Name"];
+        })
+        .attr("cx", d => xScale(d["Agricultural land (% of land area)"]))
+        .attr("cy", d => yScale(d["Death rate, crude (per 1,000 people)"]))
+        .attr("r", 5)
+        .attr("fill", "blue")
+        .append("title")
+        .text(d => d["Country Name"]);
 
 
-        /*
-         *
-         *
-         *
-         *
-         *
-         *
-         ----------------------------- Line Plot
-         *
-         *
-         *
-         *
-         *
-         *
-         *
-         */
+    /*
+    *
+    *
+    *
+    *
+    *
+    *
+    ----------------------------- Map
+    *
+    *
+    *
+    *
+    *
+    *
+    *
+    */
 
+    //var highlightedCountries = ["United States", "Canada", "Mexico", "Brazil", "Argentina", "Chile"];
+    var highlightedCountries = datasetFilteredByYear.map(item => item["Country Name"]);
+    const svg2 = d3.select("#d3_demo").attr("viewBox", [0, 0, width, height]);
 
-        // Select the dropdown element using D3
-        var dropdown = d3.select("#exampleSelect");
-        console.log(Object.keys(dataset[0]));
-        // Populate the dropdown with options from the list
-        dropdown.selectAll("option")
-            .data(Object.keys(dataset[0]).slice(3)) //you have to slice the list because the first 3 element is not a feature
-            .enter()
-            .append("option")
-            .text(function (d) {
-                return d;
-            });
+    //let projection = d3.geoEquirectangular().center([0, 0]);
+    let projection = d3.geoMercator().scale(140).translate([width / 2, height / 1.4]);
 
-        // Save the selected element to a variable
-        var selectedElement = null;
-        dropdown.on("change", function () {
-            selectedElement = d3.select(this).node().value;
-            console.log("Selected element: " + selectedElement);
+    const pathGenerator = d3.geoPath().projection(projection);
+
+    let g = svg2.append("g");
+
+    d3
+        .json(
+            "https://raw.githubusercontent.com/iamspruce/intro-d3/main/data/countries-110m.geojson"
+        )
+        .then((data) => {
+            g
+                .selectAll("path")
+                .data(data.features)
+                .join("path")
+                .on("click", function (d) {
+                    // Set a variable on click of a circle
+                    highlightPoint(d.explicitOriginalTarget.id);
+                })
+                .attr("d", pathGenerator)
+                .attr("id", function (d) {
+                    return d.properties.name;
+                })
+                .attr("class", "country")
+                .style("fill", function (d) {
+                    if (highlightedCountries.includes(d.properties.name)) {
+                        // Highlight the country in red if it's in the list of highlighted countries
+                        return "grey";
+                    }
+                })
+            ;
         });
 
 
-        // Sample data
+    /*
+     *
+     *
+     *
+     *
+     *
+     *
+     ----------------------------- Line Plot
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     */
 
 
+    // Select the dropdown element using D3
+    var dropdown = d3.select("#exampleSelect");
+    console.log(Object.keys(datasetFilteredByYear[0]));
+    // Populate the dropdown with options from the list
+    dropdown.selectAll("option")
+        .data(Object.keys(datasetFilteredByYear[0]).slice(3)) //you have to slice the list because the first 3 element is not a feature
+        .enter()
+        .append("option")
+        .text(function (d) {
+            return d;
+        });
 
-        /*
-        *
-        *
-        *
-        *
-        *
-        *
-        ----------------------------- Table
-        *
-        *
-        *
-        *
-        *
-        *
-        *
-        */
+    // Save the selected element to a variable
+    var selectedFeature = null;
+    dropdown.on("change", function () {
+        selectedFeature = d3.select(this).node().value;
+        console.log("Selected element: " + selectedFeature);
+    });
+
+
+    // Sample data
+
+    // append the svg object to the body of the page
+    const svglinePlot = d3.select("#line_plot")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    //Read the data
+    d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered_comma.csv",
+
+        // When reading the csv, I must format variables:
+        function (d) {
+            return {date: d3.timeParse("%Y-%m-%d")(d.date), value: d.value}
+        }).then(
+        // Now I can use this dataset:
+        function (data) {
+
+            // Add X axis --> it is a date format
+            const x = d3.scaleTime()
+                .domain(d3.extent(data, function (d) {
+                    return d.date;
+                }))
+                .range([0, width]);
+            svglinePlot.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x));
+
+            // Add Y axis
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, function (d) {
+                    return +d.value;
+                })])
+                .range([height, 0]);
+            svglinePlot.append("g")
+                .call(d3.axisLeft(y));
+
+            // Add the line
+            svglinePlot.append("path")
+                .datum(data)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 1.5)
+                .attr("d", d3.line()
+                    .x(function (d) {
+                        return x(d.date)
+                    })
+                    .y(function (d) {
+                        return y(d.value)
+                    })
+                )
+
+        });
+    /*
+    *
+    *
+    *
+    *
+    *
+    *
+    ----------------------------- Table
+    *
+    *
+    *
+    *
+    *
+    *
+    *
+    */
 
 
         const thead = d3.select("thead");
         const headerRow = thead.append("tr");
-        const headerKeys = Object.keys(dataset[0]);
+        const headerKeys = Object.keys(datasetFilteredByYear[0]);
         headerKeys.forEach(key => headerRow.append("th").text(key));
 
         // Select the table body element
@@ -259,7 +320,7 @@
 
         // Create a row for each object in the data array
         const rows = tbody.selectAll("tr")
-            .data(dataset)
+            .data(datasetFilteredByYear)
             .enter()
             .append("tr");
 
@@ -270,6 +331,6 @@
             .append("td")
             .text(d => d)
             .attr("class", "table-cell");
-    </script>
+</script>
 
 {% endblock %}
