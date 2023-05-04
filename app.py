@@ -72,7 +72,7 @@ def pca_df(df):
     # x_y = pca.components_.tolist()
     x_y = [[x_y[0] for x_y in pca_features], [x_y[1] for x_y in pca_features]]
     #print(x_y)
-    countries = df_x['Country Name'].tolist()
+    countries = df_x['Country Code'].tolist()
     # into_one = list(zip(countries, x_y[0], x_y[1]))
     #print(into_one)
     # data = {'year': year, 'countries': [{'country': country, 'x': x, 'y': y} for country, x ,y in into_one]}

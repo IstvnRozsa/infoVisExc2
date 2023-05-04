@@ -24,6 +24,11 @@
                 <svg id="line_plot"></svg>
             </div>
 
+            <h2>PCA Scatter Plot</h2>
+            <div class="container">
+                <svg id="pca_scatter_plot"></svg>
+            </div>
+
         </div>
         <div class="col-md-6">
             <h2>Europe</h2>
@@ -44,8 +49,8 @@
 
 <script>
     let dataset = {{ dataset | safe }};
-    let pca = {{ pca | safe }};
-    console.log("PCA", pca);
+    let pca_data = {{ pca | safe }};
+    console.log("PCA", pca_data);
     //let agricultural_land_p = dataset.map(item => item["Agricultural land (% of land area)"]);
     //let death_rate = dataset.map(item => item["Death rate, crude (per 1,000 people)"]);
     datasetFilteredByYear = dataset.filter(d => d["year"] === 2016);
@@ -55,6 +60,47 @@
     const margin = {top: 20, right: 20, bottom: 60, left: 60};
     const width = 500 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
+
+    // PCA Scatter plot
+    var pca_svg = d3.select("#pca_scatter_plot")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// Define x and y scales
+    var pca_xScale = d3.scaleLinear()
+        .domain([d3.min(pca_data.x), d3.max(pca_data.x)])
+        .range([0, width]);
+
+    var pca_yScale = d3.scaleLinear()
+        .domain([d3.min(pca_data.y), d3.max(pca_data.y)])
+        .range([height, 0]);
+
+    pca_svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(pca_xScale));
+
+    pca_svg.append("g")
+        .call(d3.axisLeft(pca_yScale));
+
+
+    pca_svg.selectAll("circle")
+        .data(d3.zip(pca_data.x, pca_data.y, pca_data.countries))
+        .enter()
+        .append("circle")
+        .attr("cx", d => pca_xScale(d[0]))
+        .attr("cy", d => pca_yScale(d[1]))
+        .on("click", function (d) {
+            // Set a variable on click of a circle
+            highlightPoint(d.explicitOriginalTarget.id);
+        })
+        .attr("id", function (d) {
+            return d[2];
+        })
+        .attr("r", 5)
+        .style("fill", "blue");
+
 
 
     // Define the tooltip
@@ -105,6 +151,8 @@
         console.log("Clicked data:", selectedData);
         svg.selectAll("circle").style("fill", "blue");
         svg.selectAll("circle#" + selectedData).style("fill", "red");
+        pca_svg.selectAll("circle").style("fill", "blue");
+        pca_svg.selectAll("circle#" + selectedData).style("fill", "red");
 
         if (previousCountry !== null) {
             g.selectAll("path#" + previousCountry).style("fill", "grey");
