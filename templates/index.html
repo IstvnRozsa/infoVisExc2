@@ -24,15 +24,16 @@
                 <svg id="line_plot"></svg>
             </div>
 
-            <h2>PCA Scatter Plot</h2>
-            <div class="container">
-                <svg id="pca_scatter_plot"></svg>
-            </div>
+
 
         </div>
         <div class="col-md-6">
             <h2>Europe</h2>
             <svg id="d3_demo"></svg>
+            <h2>PCA Scatter Plot</h2>
+            <div class="container">
+                <svg id="pca_scatter_plot"></svg>
+            </div>
         </div>
     </div>
 
@@ -59,7 +60,7 @@
     // Define the margins and dimensions of the chart
     const margin = {top: 20, right: 20, bottom: 60, left: 60};
     const width = 500 - margin.left - margin.right;
-    const height = 300 - margin.top - margin.bottom;
+    const height = 400 - margin.top - margin.bottom;
 
     // PCA Scatter plot
     var pca_svg = d3.select("#pca_scatter_plot")
@@ -217,14 +218,14 @@
 
     //var highlightedCountries = ["United States", "Canada", "Mexico", "Brazil", "Argentina", "Chile"];
     var highlightedCountries = datasetFilteredByYear.map(item => item["Country Code"]);
-    const svg2 = d3.select("#d3_demo").attr("viewBox", [0, 0, width, height]);
+    const svg2 = d3.select("#d3_demo").attr("viewBox", [0, 0, width, height-100]);
 
     //let projection = d3.geoEquirectangular().center([0, 0]);
     //let projection = d3.geoMercator().scale(140).translate([width / 2, height / 1.4]);
     let projection = d3.geoMercator()
         .center([0, 55])
         .scale(200)
-        .translate([width/2, height/2]);
+        .translate([width/2, (height-100)/2]);
 
     const pathGenerator = d3.geoPath().projection(projection);
 
