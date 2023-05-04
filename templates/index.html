@@ -44,6 +44,8 @@
 
 <script>
     let dataset = {{ dataset | safe }};
+    let pca = {{ pca | safe }};
+    console.log("PCA", pca);
     //let agricultural_land_p = dataset.map(item => item["Agricultural land (% of land area)"]);
     //let death_rate = dataset.map(item => item["Death rate, crude (per 1,000 people)"]);
     datasetFilteredByYear = dataset.filter(d => d["year"] === 2016);
@@ -96,7 +98,7 @@
         .text("Death rate, crude (per 1,000 people)");
 
 
-    var previousCountry = "Hungary";
+    var previousCountry = "HUN";
 
     function highlightPoint(selectedData) {
         // Set a variable on click of a circle
@@ -118,9 +120,9 @@
 
     function selectDataByFeature(){
         if(selectedFeature===null){
-            selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({year: d["year"], feature: d["Agricultural land (% of land area)"]}));
+            selectedDatasetByFeatures = dataset.filter(d => d["Country Code"] === previousCountry).map(d => ({year: d["year"], feature: d["Agricultural land (% of land area)"]}));
         }else{
-            selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({year: d["year"], feature: d[selectedFeature]}));
+            selectedDatasetByFeatures = dataset.filter(d => d["Country Code"] === previousCountry).map(d => ({year: d["year"], feature: d[selectedFeature]}));
         }
 
         console.log("Selected dataset: ", selectedDatasetByFeatures);
@@ -138,7 +140,7 @@
             highlightPoint(d.explicitOriginalTarget.id);
         })
         .attr("id", function (d) {
-            return d["Country Name"];
+            return d["Country Code"];
         })
         .attr("cx", d => xScale(d["Agricultural land (% of land area)"]))
         .attr("cy", d => yScale(d["Death rate, crude (per 1,000 people)"]))
@@ -166,7 +168,7 @@
     */
 
     //var highlightedCountries = ["United States", "Canada", "Mexico", "Brazil", "Argentina", "Chile"];
-    var highlightedCountries = datasetFilteredByYear.map(item => item["Country Name"]);
+    var highlightedCountries = datasetFilteredByYear.map(item => item["Country Code"]);
     const svg2 = d3.select("#d3_demo").attr("viewBox", [0, 0, width, height]);
 
     //let projection = d3.geoEquirectangular().center([0, 0]);
@@ -195,11 +197,11 @@
                 })
                 .attr("d", pathGenerator)
                 .attr("id", function (d) {
-                    return d.properties.name;
+                    return d.id;
                 })
                 .attr("class", "country")
                 .style("fill", function (d) {
-                    if (highlightedCountries.includes(d.properties.name)) {
+                    if (highlightedCountries.includes(d.id)) {
                         // Highlight the country in red if it's in the list of highlighted countries
                         return "grey";
                     }
@@ -243,7 +245,7 @@
     dropdown.on("change", function () {
         selectedFeature = d3.select(this).node().value;
         console.log("Selected element: " + selectedFeature);
-        selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({
+        selectedDatasetByFeatures = dataset.filter(d => d["Country Code"] === previousCountry).map(d => ({
             year: d["year"],
             feature: d[selectedFeature]
         }));
@@ -254,7 +256,7 @@
 
 
     // Sample data
-    selectedDatasetByFeatures = dataset.filter(d => d["Country Name"] === previousCountry).map(d => ({year: d["year"], feature: d[selectedFeature]}));
+    selectedDatasetByFeatures = dataset.filter(d => d["Country Code"] === previousCountry).map(d => ({year: d["year"], feature: d[selectedFeature]}));
     console.log("Initial dataset: ", selectedDatasetByFeatures);
 
 

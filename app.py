@@ -22,7 +22,7 @@ def load_selected_df():
     # W select 40 countries
     cc = pd.read_csv("./static/data/countrycodes.csv")
     cc_eu = cc[cc['region'] == 'Europe']
-    cc_selected = cc_eu[0:40] # 40 countries
+    cc_selected = cc_eu[0:44] # 40 countries
     #print(cc_selected)
 
     filter_key = 'Country Code'
@@ -46,28 +46,42 @@ def pca_df(df):
     # based of data from the most recent year
     year = 2016 # max(df['year']) # the year 2020 does not contain any real data
     #print(year)
+    # print(len(df["Country Name"].drop_duplicates()))
     df_x = df[df['year'] == year]
+    # print(len(df_x["Country Name"].drop_duplicates()))
     # scale
     df_x = scale_df(df_x)
+    # print("df_x with scale")
+    # print(len(df_x))
     #pca
     #print(df_x)
+    # print(df_x)
     pca = PCA(n_components=2)
-    pca.fit(df_x.iloc[:, 3:])
+    # pca.fit(df_x.iloc[:, 3:])
+    pca_features = pca.fit_transform(df_x.iloc[:, 3:])
+    # print(pca_features)
+    # print(len(pca_features))
+    # print("pca")
+    # print(pca.components_)
+    # print(len(pca.components_[0]))
     # print(pca.explained_variance_ratio_)
     # print(pca.singular_values_)
     # print(pca.components_)
 
     # make serializable and add countries and year
-    x_y = pca.components_.tolist()
+    # x_y = pca.components_.tolist()
+    x_y = [[x_y[0] for x_y in pca_features], [x_y[1] for x_y in pca_features]]
     #print(x_y)
     countries = df_x['Country Name'].tolist()
-    into_one = list(zip(countries, x_y[0], x_y[1]))
+    # into_one = list(zip(countries, x_y[0], x_y[1]))
     #print(into_one)
     # data = {'year': year, 'countries': [{'country': country, 'x': x, 'y': y} for country, x ,y in into_one]}
     # for c in data['countries']:
     # print(c)
     data = {'year': year, 'countries': countries, 'x': x_y[0], 'y': x_y[1]}
+    print(len(countries), len(pca_features))
     return data
+
 
 
 def df_to_json(df):
