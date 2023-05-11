@@ -73,12 +73,13 @@ def pca_df(df):
     x_y = [[x_y[0] for x_y in pca_features], [x_y[1] for x_y in pca_features]]
     #print(x_y)
     countries = df_x['Country Code'].tolist()
+    countrie_names = df_x["Country Name"].tolist()
     # into_one = list(zip(countries, x_y[0], x_y[1]))
     #print(into_one)
     # data = {'year': year, 'countries': [{'country': country, 'x': x, 'y': y} for country, x ,y in into_one]}
     # for c in data['countries']:
     # print(c)
-    data = {'year': year, 'countries': countries, 'x': x_y[0], 'y': x_y[1]}
+    data = {'year': year, 'countries': countries,'country_names': countrie_names, 'x': x_y[0], 'y': x_y[1]}
     print(len(countries), len(pca_features))
     return data
 
